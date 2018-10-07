@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="styles.css">
+    <script src="react.production.min.js"></script>
+    <script src="react-dom.production.min.js"></script>
+    <script src="babel.min.js"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="program"></div>
+    <script type="text/babel">
+        class App extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    section: "characters",
+                    characters: this.loadData("https://rickandmortyapi.com/api/character/"),
+                    prev: "unactive",
+                    next: "active"
+                }
+            };
+            setCharactersLink = (charactersLink) => {
+                this.setState(
+                    {
+                        characters: this.loadData(charactersLink || "https://rickandmortyapi.com/api/character/"),
+                        section: "characters",
+                    }
+                );
+            };
+            setLocationsLink = (locationsLink) => {
+                this.setState(
+                    {
+                        locations: this.loadData(locationsLink || "https://rickandmortyapi.com/api/location/"),
+                        section: "locations",
+                    }
+                );
+            };
+            setEpisodesLink = (episodesLink) => {
+                this.setState(
+                    {
+                        episodes: this.loadData(episodesLink || "https://rickandmortyapi.com/api/episode/"),
+                        section: "episodes",
+                    }
+                );
+            };
+
+            loadData = (link) => {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', link, false);
+                xhr.send();
+                if (xhr.status !== 200) {
+                    alert(xhr.status + ': ' + xhr.statusText);
+                } else {
+                    return JSON.parse(xhr.responseText);
+                }
+            }
+            changeSection = () => {
+                if (this.state.section === "characters") {
+                    return (
+                        <div>
+                            <CharacterFilters setLink={this.setCharactersLink} />
+                            <Characters characters={this.state.characters.results} />
+                            <Pages info={this.state.characters.info} setLink={this.setCharactersLink} preventDefault={this.preventDefault} />
+                        </div>
+                    );
+                } else if (this.state.section === "locations") {
+                    return (
+                        <div>
+                            <LocationFilters setLink={this.setLocationsLink} />
+                            <Locations locations={this.state.locations.results} />
+                            <Pages info={this.state.locations.info} setLink={this.setLocationsLink} preventDefault={this.preventDefault} />
+                        </div>
+                    );
+                } else if (this.state.section === "episodes") {
+                    return (
+                        <div>
+                            <EpisodeFilters setLink={this.setEpisodesLink} />
+                            <Episodes episodes={this.state.episodes.results} />
+                            <Pages info={this.state.episodes.info} setLink={this.setEpisodesLink} preventDefault={this.preventDefault} />
+                        </div>
+                    );
+                }
+            };
+            preventDefault = (event) => {
+                event.preventDefault();
+            }
+            render () {
+                return (
+                    <div>
+                        <div onClick={() => this.setCharactersLink()} onMouseDown={this.preventDefault} className="button" id="characters">
+                            Characters
+                        </div>
+                        <div onClick={() => this.setLocationsLink()} onMouseDown={this.preventDefault} className="button" id="locations">
+                            Locations
+                        </div>
+                        <div onClick={() => this.setEpisodesLink()} onMouseDown={this.preventDefault} className="button" id="episodes">
+                            Episodes
+                        </div>
+                        {this.changeSection ()}
+                    </div>
+                )
+            }
+        };
+        class Pages extends React.Component {
+            render () {
+                var prevClass = "";
+                var prevOnClick = () => this.props.setLink (this.props.info.prev);
+                var nextClass = "";
+                var nextOnClick = () => this.props.setLink (this.props.info.next);
+                if (this.props.info.prev === "") {
+                    prevClass = "unactive";
+                    prevOnClick = "";
+                } 
+                if (this.props.info.next === "") {
+                    nextClass = "unactive";
+                    nextOnClick = "";
+                } 
+                    return (
+                        <div className="pages">
+                            <span className={prevClass} onClick={prevOnClick} onMouseDown={this.props.preventDefault} id="prev">prev</span>
+                            <span> | </span>
+                            <span className={nextClass} onClick={nextOnClick} onMouseDown={this.props.preventDefault} id="next">next</span>
+                        </div>
+                    )
+            }
+        };
+        class CharacterFilters extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    characterNameValue: "",
+                    statusValue: "",
+                    speciesValue: "",
+                    genderValue: ""
+                }
+            };
+            addEnterHandler = (event) => {
+                    if (event.keyCode === 13) {
+                        this.setLink();
+                    }
+            };
+            setLink = () => {this.props.setLink ("https://rickandmortyapi.com/api/character/" + "?name=" + this.state.characterNameValue + "&status=" + this.state.statusValue + "&species=" + this.state.speciesValue + "&gender=" + this.state.genderValue);}
+            render () {
+                return (
+                    <div id="characterFilters" className="filters">
+                        <label htmlFor="characterName">Name: </label>
+                        <input onChange={(event) => {this.setState ({characterNameValue: event.target.value})}} onKeyUp={this.addEnterHandler} type="text" id="characterName" name="characterName" />
+                        <label htmlFor="status">Status: </label>
+                        <input onChange={(event) => {this.setState ({statusValue: event.target.value})}} onKeyUp={this.addEnterHandler} type="text" id="status" name="status" />
+                        <label htmlFor="species">Species: </label>
+                        <input onChange={(event) => {this.setState ({speciesValue: event.target.value})}} onKeyUp={this.addEnterHandler} type="text" id="species" name="species" />
+                        <label htmlFor="gender">Gender: </label>
+                        <input onChange={(event) => {this.setState ({genderValue: event.target.value})}} onKeyUp={this.addEnterHandler} type="text" id="gender" name="gender" />
+                        <button onClick={this.setLink} id="filterCharacters">Filter</button>
+                    </div> 
+                )
+            }
+        };
+        class LocationFilters extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    locationNameValue: "",
+                    typeValue: "",
+                    dimensionValue: ""
+                }
+            };
+            addEnterHandler = (event) => {
+                    if (event.keyCode === 13) {
+                        this.setLink();
+                    }
+            };
+            setLink = () => {this.props.setLink ("https://rickandmortyapi.com/api/location/" + "?name=" + this.state.locationNameValue + "&type=" + this.state.typeValue + "&dimension=" + this.state.dimensionValue);}
+            render () {
+                return (
+                    <div id="locationFilters" className="filters">
+                        <label htmlFor="locationName">Name: </label>
+                        <input onChange={(event) => {this.setState ({locationNameValue: event.target.value})}} onKeyUp={this.addEnterHandler} type="text" id="locationName" name="locationName" />
+                        <label htmlFor="type">Type: </label>
+                        <input onChange={(event) => {this.setState ({typeValue: event.target.value})}} onKeyUp={this.addEnterHandler} type="text" id="type" name="type" />
+                        <label htmlFor="dimension">Dimension: </label>
+                        <input onChange={(event) => {this.setState ({dimensionValue: event.target.value})}} onKeyUp={this.addEnterHandler} type="text" id="dimension" name="dimension" />
+                        <button onClick={this.setLink} id="filterLocations">Filter</button>
+                    </div>
+                )
+            }
+        };
+        class EpisodeFilters extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    episodeNameValue: "",
+                    episodeValue: ""
+                }
+            };
+            addEnterHandler = (event) => {
+                    if (event.keyCode === 13) {
+                        this.setLink();
+                    }
+            };
+            setLink = () => {this.props.setLink ("https://rickandmortyapi.com/api/episode/" + "?name=" + this.state.episodeNameValue + "&episode=" + this.state.episodeValue);}
+            render () {
+                return (
+                    <div id="episodeFilters" className="filters">
+                        <label htmlFor="episodeName">Name: </label>
+                        <input onChange={(event) => {this.setState ({episodeNameValue: event.target.value})}} onKeyUp={this.addEnterHandler} type="text" id="episodeName" name="episodeName" />
+                        <label htmlFor="episode">Episode: </label>
+                        <input onChange={(event) => {this.setState ({episodeValue: event.target.value})}} onKeyUp={this.addEnterHandler} type="text" id="episode" name="episode" />
+                        <button onClick={this.setLink} id="filterEpisodes">Filter</button>
+                    </div>
+                )
+            }
+        };
+        class Characters extends React.Component {
+                render () {
+                    return (
+                        <div className="container">
+                        {this.props.characters.map ((character) => <CharacterCard character={character} />)}
+                        </div>
+                    );
+                }
+        };
+        class CharacterCard extends React.Component {
+            render () {
+                var character = this.props.character;
+                return (
+                    <div className="character-card">
+                        <img src={character.image}></img>
+                        <div className="title">
+                            <div className="characterName">{character.name}</div>
+                            <div>{"id: " + character.id}</div>
+                        </div>
+                        <div className="info">
+                            <div class="row">
+                                <div class="key">status</div>
+                                <div class="value">{character.status}</div>
+                            </div>
+                            <div class="row">
+                                <div class="key">species</div>
+                                <div class="value">{character.species}</div>
+                            </div>
+                            <div class="row">
+                                <div class="key">gender</div>
+                                <div class="value">{character.gender}</div>
+                            </div>
+                            <div class="row">
+                                <div class="key">origin</div>
+                                <div class="value">{character.origin.name}</div>
+                            </div>
+                            <div class="row">
+                                <div class="key">last location</div>
+                                <div class="value">{character.location.name}</div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        };
+        class Locations extends React.Component {
+                render () {
+                    return (
+                        <div className="container">
+                        {this.props.locations.map ((location) => <LocationCard location={location} />)}
+                        </div>
+                    ); 
+                }
+        };
+        class LocationCard extends React.Component {
+            render () {
+                var location = this.props.location;
+                return (
+                    <div className="location-card">
+                            <div class="row">
+                                <div class="key">id</div>
+                                <div class="value">{location.id}</div>
+                            </div>
+                            <div class="row">
+                                <div class="key">name</div>
+                                <div class="value">{location.name}</div>
+                            </div>
+                            <div class="row">
+                                <div class="key">type</div>
+                                <div class="value">{location.type}</div>
+                            </div>
+                            <div class="row">
+                                <div class="key">dimension</div>
+                                <div class="value">{location.dimension}</div>
+                            </div>
+                    </div>
+                )
+            }
+        };
+        class Episodes extends React.Component {
+                render () {
+                    return (
+                        <div className="container">
+                        {this.props.episodes.map ((episode) => <EpisodeCard episode={episode} />)}
+                        </div>
+                    ); 
+                }
+        };
+        class EpisodeCard extends React.Component {
+            render () {
+                var episode = this.props.episode;
+                return (
+                    <div className="episode-card">
+                            <div class="row">
+                                <div class="key">id</div>
+                                <div class="value">{episode.id}</div>
+                            </div>
+                            <div class="row">
+                                <div class="key">name</div>
+                                <div class="value">{episode.name}</div>
+                            </div>
+                            <div class="row">
+                                <div class="key">air date</div>
+                                <div class="value">{episode.air_date}</div>
+                            </div>
+                            <div class="row">
+                                <div class="key">episode</div>
+                                <div class="value">{episode.episode}</div>
+                            </div>
+                    </div>
+                )
+            }
+        };
+        const app = document.getElementById("program");
+        ReactDOM.render (<App />, app);
+    </script>
+</body>
+</html>
